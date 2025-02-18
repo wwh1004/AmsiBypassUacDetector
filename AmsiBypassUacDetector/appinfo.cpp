@@ -134,6 +134,19 @@ void FixParamPointersImpl(T* param) {
           (LPWSTR)((PBYTE)param + (SIZE_T)axInfo->lpwszSourceURL);
       break;
     }
+    case CONSENTUI_REQUEST_PACKAGED_APP: {
+      auto packagedAppInfo = &param->RequestType.PackagedAppInfo;
+      packagedAppInfo->lpwszApplicationName =
+          (LPWSTR)((PBYTE)param +
+                   (SIZE_T)packagedAppInfo->lpwszApplicationName);
+      packagedAppInfo->lpwszCommandLine =
+          (LPWSTR)((PBYTE)param + (SIZE_T)packagedAppInfo->lpwszCommandLine);
+      packagedAppInfo->lpPackageFamilyName =
+          (LPWSTR)((PBYTE)param + (SIZE_T)packagedAppInfo->lpPackageFamilyName);
+      packagedAppInfo->lpApplicationId =
+          (LPWSTR)((PBYTE)param + (SIZE_T)packagedAppInfo->lpApplicationId);
+      break;
+    }
     default:
       PRINTF(L"Unknown consent param UAC request type %d",
              param->dwRequestType);
@@ -215,6 +228,7 @@ void DumpConsentUIParam(T* param) {
           packagedAppInfo->lpPackageFamilyName,
           packagedAppInfo->lpApplicationId,
           packagedAppInfo->ulRequestorProcessId);
+      break;
     }
     default:
       PRINTF(L"Unknown consent param UAC request type %d",
