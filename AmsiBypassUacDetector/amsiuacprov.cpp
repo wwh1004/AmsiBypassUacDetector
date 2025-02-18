@@ -148,12 +148,6 @@ BOOL CheckMasqueradedProcess(HANDLE hProcess) {
 BOOL CheckMasqueradedProcesses() {
   BOOL found = FALSE;
   EnumerateProcesses([&found](HANDLE hProcess) {
-    /*  HANDLE hProcess = NULL;
-      if (!DuplicateHandle(GetCurrentProcess(), t, GetCurrentProcess(),
-      &hProcess, PROCESS_ALL_ACCESS, FALSE, 0)) { return TRUE;
-      }
-
-      CloseHandle(hProcess);*/
     found |= CheckMasqueradedProcess(hProcess);
     return TRUE;
   });
@@ -252,10 +246,16 @@ HRESULT SampleAmsiUacProvider::UacScan(_In_ LPAMSI_UAC_REQUEST_CONTEXT context,
     DumpConsentUIParam(clientPID);
   }
 
-  clock_t start = clock();
-  *result = CheckMasqueradedProcesses() ? AMSI_RESULT_DETECTED
-                                        : AMSI_RESULT_NOT_DETECTED;
-  TRACEF(L"CheckMasqueradedProcesses took %d ms", clock() - start);
+  // OPTIMIZATION: Only check masqueraded processes if the request is
+  // auto-elevate
+  if (context->bAutoElevateRequest) {
+    clock_t start = clock();
+    *result = CheckMasqueradedProcesses() ? AMSI_RESULT_DETECTED
+                                          : AMSI_RESULT_NOT_DETECTED;
+    TRACEF(L"CheckMasqueradedProcesses took %d ms", clock() - start);
+  } else {
+    *result = AMSI_RESULT_NOT_DETECTED;
+  }
 
   return S_OK;
 }
